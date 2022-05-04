@@ -8,15 +8,16 @@ sys.path.insert(2, 'Face-Recognition')
 from load_custom_model import loadCustomModel
 from detection import fireDetection
 from face_recognition_module import myFaceRecognition, getInitialValue, collectingData, startCollectingData
-from engine import drawFocus, getFPS, getDistance
+from engine import drawFocus, getFPS, getDistance, checkDetection, controllerServo, initConnection, sendData
 
 FIRE_TRACKING_PATH = 'Fire-Tracking'
 FACE_RECOGNITION_PATH = 'Face-Recognition'
 
-# model = loadCustomModel(path=f'{FIRE_TRACKING_PATH}/best.pt', conf=0.4, iou=0.7)
-model = torch.hub.load('ultralytics/yolov5', 'yolov5n')
+model = loadCustomModel(path=f'{FIRE_TRACKING_PATH}/best.pt', conf=0.55, iou=0.7)
+# model = torch.hub.load('ultralytics/yolov5', 'yolov5n')
 
-
+PORT = "COM4"
+ser = initConnection("COM4", 9600)  
 numOfSample, currentSample, currentMember, encodeListKnown, classNames = getInitialValue(path=FACE_RECOGNITION_PATH)
 state = 0
 dispW=640
@@ -35,21 +36,23 @@ while(True):
 	img, pTime = getFPS(img, pTime)
 
 	'''CHECK STATE'''
+	# Fire Detection
 	if state == 0:
 		img, minPoint, maxPoint, centerPoint, isDetection = fireDetection(img, model)
-		if isDetection:
-			# print("There is FIRE !!!")
-			img = drawFocus(img, minPoint, maxPoint, centerPoint, dispW, dispH, distanceThreshold)
-			distance = getDistance(centerPoint, [int(dispW / 2), int(dispH / 2)])
-			# print(distance)
-			if distance > distanceThreshold:
-				print("Tracking !!!!!")
-		else:
-			print("Nothing!!!")
-
+		img = checkDetection(isDetection, img, centerPoint, dispW, dispH, distanceThreshold)
+		LR, UD = controllerServo([int(dispW / 2), int(dispH / 2)], centerPoint, distanceThreshold, isDetection)
+		sendData(ser, [LR, UD, 0], 3)
+	# Face Detection
 	if state == 1:
-		img = myFaceRecognition(img, encodeListKnown, classNames)
+		img, minPoint, maxPoint, centerPoint, isDetection, isTrueFace = myFaceRecognition(img, encodeListKnown, classNames)
+		img = checkDetection(isDetection, img, centerPoint, dispW, dispH, distanceThreshold)
+		LR, UD = controllerServo([int(dispW / 2), int(dispH / 2)], centerPoint, distanceThreshold, isDetection)
+		isOpen = 0
+		if (isTrueFace):
+			isOpen = 1
+		sendData(ser, [LR, UD, isOpen], 3)
 
+	# CollectingData
 	if state == 2:
 		currentMember, currentSample, numOfSample, state, encodeListKnown, classNames = collectingData(img, currentMember, currentSample, numOfSample, state, encodeListKnown, classNames, path=FACE_RECOGNITION_PATH)
 
@@ -75,6 +78,8 @@ while(True):
 
 	cv2.imshow('YOLO', img)
 	if cv2.waitKey(1) & 0xFF == ord('q'):
+		print("Stop Camera !!")
+		time.sleep(2)
 		break
   
 cap.release()
