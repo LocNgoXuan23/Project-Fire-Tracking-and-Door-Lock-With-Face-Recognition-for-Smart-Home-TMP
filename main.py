@@ -1,4 +1,3 @@
-from dis import dis
 import cv2
 import sys
 import torch
@@ -59,22 +58,25 @@ while(True):
 	'''EVENT'''
 	# Start Data Collection
 	if cv2.waitKey(1) & 0xFF == ord('2'):
-		state = 2
-		print("Start Data Collection")
-		time.sleep(2)
-		currentMember = startCollectingData(currentMember, path=FACE_RECOGNITION_PATH)
+		if state != 2:
+			state = 2
+			print("Start Data Collection")
+			time.sleep(2)
+			currentMember = startCollectingData(currentMember, path=FACE_RECOGNITION_PATH)
 
 	# Start Face Recognition
 	if cv2.waitKey(1) & 0xFF == ord('1'):
-		state = 1
-		print("Start Face Recognition")
-		time.sleep(2)
+		if state != 1:
+			state = 1
+			print("Start Face Recognition")
+			time.sleep(2)
 
 	# Start Fire Detection
 	if cv2.waitKey(1) & 0xFF == ord('0'):
-		state = 0
-		print("Start Fire Detection")
-		time.sleep(2)
+		if state != 0:
+			state = 0
+			print("Start Fire Detection")
+			time.sleep(2)
 
 	cv2.imshow('YOLO', img)
 	if cv2.waitKey(1) & 0xFF == ord('q'):

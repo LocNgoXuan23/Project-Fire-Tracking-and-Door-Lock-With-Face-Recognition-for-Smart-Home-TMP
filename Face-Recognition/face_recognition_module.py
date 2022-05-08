@@ -74,7 +74,7 @@ def collectingData(img, currentMember, currentSample, numOfSample, state, encode
 	currentSample += 1
 	if currentSample == numOfSample:
 		currentSample = 0
-		state = 0
+		state = 1
 		encodeListKnown, classNames = getEncodeList(path=path)
 	
 	return currentMember, currentSample, numOfSample, state, encodeListKnown, classNames
