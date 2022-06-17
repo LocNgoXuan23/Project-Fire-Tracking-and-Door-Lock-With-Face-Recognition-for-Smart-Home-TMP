@@ -35,9 +35,11 @@ def checkDetection(isDetection, img, centerPoint, dispW, dispH, distanceThreshol
 		distance = getDistance(centerPoint, [int(dispW / 2), int(dispH / 2)])
 		# print(distance)
 		if distance > distanceThreshold:
-			print("Tracking !!!!!")
+			# print("Tracking !!!!!")
+			pass
 	else:
-		print("Nothing!!!")
+		# print("Nothing!!!")
+		pass
 	return img
 
 def getDistance(point1, point2):
