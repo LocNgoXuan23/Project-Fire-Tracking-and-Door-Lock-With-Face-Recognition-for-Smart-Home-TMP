@@ -13,6 +13,11 @@ int counter = 0;
 bool counterStart = false;
 String receivedString;
 
+bool isLR = true;
+bool isUD = true;
+bool isChange = true;
+int state = 1;
+
 Servo myservoUD;
 Servo myservoLR;
 int pos = 0;  
@@ -26,7 +31,7 @@ void setup() {
   myservoUD.attach(10); 
   myservoLR.attach(9); 
   pinMode(13, OUTPUT);
-  Serial.begin(9600);
+  Serial.begin(1200);
 }
 
 void RGB_color(int red_light_value, int green_light_value, int blue_light_value)
@@ -62,21 +67,44 @@ void receiveData() {
 }
 
 
-
 void loop() {
   receiveData(); 
+
+
+  if (isChange == false) {
+    Serial.print(state);
+    Serial.print("-");
+    Serial.print(valsRec[2]);
+    Serial.print("\n");
+    Serial.print("yyyyyyyyyyyyyyyyyyyyyyy\n");
+    if (int(state) != int(valsRec[2])) {
+      Serial.print("xxxxxxxxxxxxxxxxxxxxxxxxx\n");
+      isChange = true;
+    }
+  }
+  
   
   if (valsRec[0] == 0) {
     LRPos = LRPos;
   }
   if (valsRec[0] == 1) {
     if (LRPos < 180) {
-      LRPos = LRPos + 1;
+      if (isChange == true) LRPos = LRPos + 1;
+    }
+    else {
+      LRPos = 90;
+      isChange = false;
+      state = valsRec[2];
     }
   }
   if (valsRec[0] == 2) {
     if (LRPos > 0) {
-      LRPos = LRPos -1;
+      if (isChange == true) LRPos = LRPos - 1;
+    }
+    else {
+      LRPos = 90;
+      isChange = false;
+      state = valsRec[2];
     }
   }
 
@@ -85,22 +113,32 @@ void loop() {
   }
   if (valsRec[1] == 1) {
     if (UDPos < 180) {
-      UDPos = UDPos + 1;
+      if (isChange == true) UDPos = UDPos + 1;
+    }
+    else {
+      UDPos = 90;
+      isChange == false;
+      state = valsRec[2];
     }
   }
   if (valsRec[1] == 2) {
     if (LRPos > 0) {
-      UDPos = UDPos -1;
+      if (isChange == true) UDPos = UDPos -1;
+    }
+    else {
+      UDPos = 90;
+      isChange = false;
+      state = valsRec[2];
     }
   }
 
-  if (valsRec[2] == 0) {
-    RGB_color(0, 255, 0);
-  }
-  if (valsRec[2] == 1) {
-    RGB_color(255, 0, 0);
-  } 
-  
+//  if (valsRec[2] == 0) {
+//    RGB_color(0, 255, 0);
+//  }
+//  if (valsRec[2] == 1) {
+//    RGB_color(255, 0, 0);
+//  } 
+//  
 //  Serial.print(LRPos);
 //  Serial.print("-");
 //  Serial.print(UDPos);
@@ -111,11 +149,18 @@ void loop() {
   Serial.print(valsRec[1]);
   Serial.print("-");
   Serial.print(valsRec[2]);
+  Serial.print("---");
+  Serial.print(LRPos);
   Serial.print("-");
+  Serial.print(UDPos);
+  Serial.print("-");
+  Serial.print(isChange);
   Serial.print("\n");
 
   myservoLR.write(LRPos);
   myservoUD.write(UDPos); 
+
+  
 
   delay(50);
   

@@ -1,7 +1,6 @@
 from tkinter import NONE
 import cv2
 import sys
-import torch
 import time
 sys.path.insert(1, 'Fire-Tracking')
 sys.path.insert(2, 'Face-Recognition')
@@ -28,6 +27,8 @@ camSet = 0
 distanceThreshold = 100
 cap = cv2.VideoCapture(camSet)
 
+isAnother = True
+
 tmpData = None
 
 while(True):
@@ -45,21 +46,37 @@ while(True):
 		LR, UD = controllerServo([int(dispW / 2), int(dispH / 2)], centerPoint, distanceThreshold, isDetection)
 		if [LR, UD, 0] != tmpData:
 			tmpData = [LR, UD, 0]
-			print([LR, UD, 0])
-			sendData(ser, [LR, UD, 0], 3)
+			isAnother = not isAnother
+			if isAnother == True:
+				sendData(ser, [LR, UD, 1], 3)
+				print([LR, UD, 1])
+
+			else:
+				sendData(ser, [LR, UD, 0], 3)
+				print([LR, UD, 0])
+
+			
 	# Face Detection
 	if state == 1:
 		img, minPoint, maxPoint, centerPoint, isDetection, isTrueFace = myFaceRecognition(img, encodeListKnown, classNames)
 		img = checkDetection(isDetection, img, centerPoint, dispW, dispH, distanceThreshold)
 		LR, UD = controllerServo([int(dispW / 2), int(dispH / 2)], centerPoint, distanceThreshold, isDetection)
-		isOpen = 0
-		if (isTrueFace):
-			isOpen = 1
-		# sendData(ser, [LR, UD, isOpen], 3)
-		if [LR, UD, isOpen] != tmpData:
-			tmpData = [LR, UD, isOpen]
-			print([LR, UD, isOpen])
-			sendData(ser, [LR, UD, isOpen], 3)
+		# isOpen = 0
+		# if (isTrueFace):
+		# 	isOpen = 1
+		# # sendData(ser, [LR, UD, isOpen], 3)
+		# if [LR, UD, isOpen] != tmpData:
+		# 	tmpData = [LR, UD, isOpen]
+		# 	print([LR, UD, isOpen])
+		# 	sendData(ser, [LR, UD, isOpen], 3)
+		if [LR, UD, 0] != tmpData:
+			tmpData = [LR, UD, 0]
+			print([LR, UD, 0])
+			isAnother = not isAnother
+			if isAnother:
+				sendData(ser, [LR, UD, 1], 3)
+			else:
+				sendData(ser, [LR, UD, 0], 3)
 
 	# CollectingData
 	if state == 2:
